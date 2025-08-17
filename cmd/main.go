@@ -11,6 +11,9 @@ import (
 	"github.com/ByChanderZap/exile-tracker/cmd/api"
 	"github.com/ByChanderZap/exile-tracker/config"
 	"github.com/ByChanderZap/exile-tracker/db"
+	"github.com/ByChanderZap/exile-tracker/poeclient"
+	"github.com/ByChanderZap/exile-tracker/repository"
+	"github.com/ByChanderZap/exile-tracker/services"
 	"github.com/ByChanderZap/exile-tracker/utils"
 	"github.com/rs/zerolog"
 )
@@ -27,11 +30,21 @@ func main() {
 
 	initStorage(db, log)
 
+	repo := repository.NewRepository(db)
+	poeClient := poeclient.NewPoeClient(10 * time.Second)
+
+	fetcher := services.NewFetcherService(repo, poeClient, 20*time.Minute)
+
 	// Start server in a goroutine
 	go func() {
 		if err := server.Start(); err != nil && err.Error() != "http: Server closed" {
 			log.Fatal().Err(err).Msg("Failed to start API server")
 		}
+	}()
+
+	// Start fetcher service in a goroutine
+	go func() {
+		fetcher.Start(context.Background())
 	}()
 
 	// Wait for shutdown signal
@@ -47,6 +60,10 @@ func main() {
 	if err := server.Stop(ctx); err != nil {
 		log.Error().Err(err).Msg("Error shutting down API server")
 	}
+
+	// Stop fetcher gracefully
+	log.Info().Msg("Shutting down fetcher")
+	fetcher.Stop()
 
 	log.Info().Msg("Application shutdown complete.")
 }
