@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"time"
 
 	"github.com/ByChanderZap/exile-tracker/models"
@@ -41,15 +40,16 @@ func (r *Repository) GetCharactersByAccountId(accountId string) ([]models.Charac
 	return characters, nil
 }
 
-func (r *Repository) CreateCharacter(accountId string, characterName string) error {
+func (r *Repository) CreateCharacter(accountId string, characterName string, currentLeague string) error {
 	query := `
-		INSERT INTO characters(id, account_id, character_name, created_at, updated_at)
-		VALUES(?,?,?,?,?)
+		INSERT INTO characters(id, account_id, character_name, current_league, created_at, updated_at)
+		VALUES(?,?,?,?,?,?)
 	`
 
-	now := time.Now()
+	now := time.Now().UTC().Format(time.RFC3339)
+
 	idString := uuid.New().String()
-	_, err := r.db.Exec(query, idString, accountId, characterName, now, now)
+	_, err := r.db.Exec(query, idString, accountId, characterName, currentLeague, now, now)
 
 	return err
 }
@@ -60,10 +60,19 @@ func (r *Repository) UpdateDiedStatus(characterId string, died bool) error {
 		WHERE id = ?
 	`
 
-	now := time.Now()
+	now := time.Now().UTC().Format(time.RFC3339)
 
 	_, err := r.db.Exec(query, died, now, characterId)
 
+	return err
+}
+
+func (r *Repository) KillCharacter(characterId string) error {
+	query := `
+		UPDATE characters SET died = ?, updated_at = ? 
+		WHERE id = ?
+	`
+	_, err := r.db.Exec(query, true, time.Now().UTC().Format(time.RFC3339), characterId)
 	return err
 }
 
@@ -95,6 +104,21 @@ func (r *Repository) GetCharactersToFetch() ([]models.CharactersToFetch, error) 
 	return cToFetch, nil
 }
 
+const addCharacterToFetch = `
+INSERT INTO characters_to_fetch(id, character_id)
+		VALUES(?,?)
+`
+
+type AddCharactersToFetchParams struct {
+	CharacterId string
+}
+
+func (r *Repository) AddCharacterToFetch(params AddCharactersToFetchParams) error {
+	id := uuid.New().String()
+	_, err := r.db.Exec(addCharacterToFetch, id, params.CharacterId)
+	return err
+}
+
 func (r *Repository) SetShouldSkip(shouldSkip bool, id string) error {
 	query := `
 		UPDATE characters_to_fetch
@@ -102,36 +126,92 @@ func (r *Repository) SetShouldSkip(shouldSkip bool, id string) error {
 		WHERE id = ?
 	`
 
-	_, err := r.db.Exec(query, shouldSkip, time.Now(), id)
+	_, err := r.db.Exec(query, shouldSkip, time.Now().UTC().Format(time.RFC3339), id)
 	return err
 }
 
 func (r *Repository) GetCharacterByID(id string) (models.Character, error) {
 	query := `
-	SELECT id, account_id, character_name, died, current_league
-	FROM characters
-	WHERE id = ?
-	`
-
-	rows, err := r.db.Query(query, id)
+    SELECT id, account_id, character_name, died, current_league, created_at, updated_at
+    FROM characters
+    WHERE id = ?
+    `
+	var c models.Character
+	err := r.db.QueryRow(query, id).Scan(
+		&c.ID,
+		&c.AccountId,
+		&c.CharacterName,
+		&c.Died,
+		&c.CurrentLeague,
+		&c.CreatedAt,
+		&c.UpdatedAt,
+	)
 	if err != nil {
 		return models.Character{}, err
 	}
+	return c, nil
+}
+
+func (r *Repository) GetAllCharacters() ([]models.Character, error) {
+	query := `
+	SELECT id, account_id, character_name, died, current_league, created_at, updated_at
+	FROM characters
+	WHERE deleted_at IS NULL
+	`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
 	defer rows.Close()
 
-	var c models.Character
-	if rows.Next() {
+	var characters []models.Character
+	for rows.Next() {
+		var char models.Character
 		err := rows.Scan(
-			&c.ID,
-			&c.AccountId,
-			&c.CharacterName,
-			&c.Died,
-			&c.CurrentLeague,
+			&char.ID,
+			&char.AccountId,
+			&char.CharacterName,
+			&char.Died,
+			&char.CurrentLeague,
+			&char.CreatedAt,
+			&char.UpdatedAt,
 		)
 		if err != nil {
-			return models.Character{}, nil
+			return nil, err
 		}
-		return c, nil
+		characters = append(characters, char)
 	}
-	return models.Character{}, sql.ErrNoRows
+
+	return characters, nil
+}
+
+const updateCharacter = `
+UPDATE characters
+SET character_name = ?, 
+	died = ?, 
+	current_league = ?,
+	updated_at = ?
+WHERE id = ?
+`
+
+type UpdateCharacterParams struct {
+	ID            string
+	CharacterName string
+	Died          bool
+	CurrentLeague string
+	UpdatedAt     string
+}
+
+func (r *Repository) UpdateCharacter(arg UpdateCharacterParams) error {
+	_, err := r.db.Exec(updateCharacter,
+		arg.CharacterName,
+		arg.Died,
+		arg.CurrentLeague,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }

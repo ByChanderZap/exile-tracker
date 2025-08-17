@@ -3,10 +3,10 @@
 CREATE TABLE IF NOT EXISTS characters_to_fetch(
   id TEXT PRIMARY KEY,
   character_id TEXT NOT NULL,
-  last_fetch TIMESTAMP,
+  last_fetch TEXT,
   should_skip boolean NOT NULL DEFAULT false,
 
-  FOREIGN KEY(character_id) REFERENCES character(id) ON DELETE CASCADE 
+  FOREIGN KEY(character_id) REFERENCES characters(id) ON DELETE CASCADE 
 );
 -- +goose StatementEnd
 

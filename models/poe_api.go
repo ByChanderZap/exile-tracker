@@ -24,6 +24,7 @@ type PassiveSkillsResponse struct {
 
 // PassiveItem represents an item in the passive skills response
 type PassiveItem struct {
+	// Duplicated    bool           `json:"duplicated"`
 	Verified      bool           `json:"verified"`
 	W             int            `json:"w"`
 	H             int            `json:"h"`
@@ -54,10 +55,12 @@ type PassiveItem struct {
 
 // ItemProperty represents a property of an item
 type ItemProperty struct {
-	Name        string     `json:"name"`
-	Values      [][]string `json:"values"`
-	DisplayMode int        `json:"displayMode"`
-	Type        int        `json:"type,omitempty"`
+	Name        string          `json:"name"`
+	Values      [][]interface{} `json:"values"`
+	DisplayMode int             `json:"displayMode"`
+	Type        int             `json:"type,omitempty"`
+	Suffix      string          `json:"suffix,omitempty"`
+	Progress    float32         `json:"progress,omitempty"`
 }
 
 // JewelData represents jewel data in the passive skills response
@@ -88,12 +91,12 @@ type JewelNode struct {
 	Skill          string          `json:"skill,omitempty"`
 	Name           string          `json:"name,omitempty"`
 	Icon           string          `json:"icon,omitempty"`
-	Stats          []string        `json:"stats,omitempty"`
+	Stats          []string        `json:"stats"`
 	Group          string          `json:"group"`
 	Orbit          int             `json:"orbit"`
 	OrbitIndex     int             `json:"orbitIndex"`
-	Out            []string        `json:"out,omitempty"`
-	In             []string        `json:"in,omitempty"`
+	Out            []string        `json:"out"`
+	In             []string        `json:"in"`
 	IsJewelSocket  bool            `json:"isJewelSocket,omitempty"`
 	IsMastery      bool            `json:"isMastery,omitempty"`
 	IsNotable      bool            `json:"isNotable,omitempty"`
@@ -135,11 +138,12 @@ type Item struct {
 	Rarity                string          `json:"rarity"`
 	Ilvl                  int             `json:"ilvl"`
 	Identified            bool            `json:"identified"`
+	Duplicated            bool            `json:"duplicated,omitempty"`
 	Properties            []ItemProperty  `json:"properties,omitempty"`
 	Requirements          []ItemProperty  `json:"requirements,omitempty"`
 	ExplicitMods          []string        `json:"explicitMods,omitempty"`
 	ImplicitMods          []string        `json:"implicitMods,omitempty"`
-	DescrText             string          `json:"descrText"`
+	DescrText             string          `json:"descrText,omitempty"`
 	FlavourText           []string        `json:"flavourText,omitempty"`
 	FrameType             int             `json:"frameType"`
 	X                     int             `json:"x"`

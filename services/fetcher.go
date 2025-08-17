@@ -113,11 +113,13 @@ func (fs *FetcherService) FetchCharacterData(ctf models.CharactersToFetch) {
 	var itemsResponse models.ItemsResponse
 	if err := json.Unmarshal(items, &itemsResponse); err != nil {
 		log.Error().Err(err).Msg("Failed to unmarshall items")
+		return
 	}
 
 	var passivesResponse models.PassiveSkillsResponse
 	if err := json.Unmarshal(passives, &passivesResponse); err != nil {
 		log.Error().Err(err).Msg("Failed to unmarshall passive skills")
+		return
 	}
 
 	fs.CreateSnapshot(c.ID, itemsResponse, passivesResponse)
