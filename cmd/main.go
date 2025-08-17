@@ -21,18 +21,16 @@ import (
 func main() {
 	log := utils.ChildLogger("main")
 
-	server := api.NewAPIServer(config.Envs.Port)
-
 	db, err := db.NewSqliteStorage(config.Envs.DBPath)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to initialize database")
 	}
 
 	initStorage(db, log)
-
 	repo := repository.NewRepository(db)
-	poeClient := poeclient.NewPoeClient(10 * time.Second)
 
+	server := api.NewAPIServer(config.Envs.Port, repo)
+	poeClient := poeclient.NewPoeClient(10 * time.Second)
 	fetcher := services.NewFetcherService(repo, poeClient, 20*time.Minute)
 
 	// Start server in a goroutine

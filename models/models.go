@@ -13,11 +13,11 @@ type Account struct {
 }
 
 type Character struct {
-	ID            string `json:"id"`
-	AccountId     string `json:"account_id"`
-	CharacterName string `json:"CharacterName"`
-	Died          bool   `json:"died"`
-	CurrentLeague string `json:"current_league"`
+	ID            string  `json:"id"`
+	AccountId     string  `json:"account_id"`
+	CharacterName string  `json:"CharacterName"`
+	Died          bool    `json:"died"`
+	CurrentLeague *string `json:"current_league"`
 
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`

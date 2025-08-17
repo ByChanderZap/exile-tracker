@@ -52,3 +52,6 @@ temp/
 
 # db data 
 data.db
+
+# logs file
+logs.json
