@@ -22,3 +22,4 @@ RETURNING *;
 UPDATE characters
 SET died = TRUE
 where id = ?
+RETURNING *;
