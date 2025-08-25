@@ -13,6 +13,7 @@ type Config struct {
 	POEAPIBaseUrl          string
 	FetchIntervalInMinutes int64
 	DBPath                 string
+	POBRoot                string
 }
 
 var Envs = initConfig()
@@ -26,6 +27,7 @@ func initConfig() Config {
 		POEAPIBaseUrl:          getEnv("POE_API_BASE_URL", "https://api.example.com"),
 		FetchIntervalInMinutes: getEnvAsInt("FETCH_INTERVAL_IN_MINUTES", 30),
 		DBPath:                 getEnv("DB_PATH", "./data.db"),
+		POBRoot:                getEnv("POB_ROOT", "/home/alexander/dev/goofing/PathOfBuilding"),
 	}
 }
 

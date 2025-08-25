@@ -7,16 +7,27 @@ import (
 	"github.com/google/uuid"
 )
 
-func (r *Repository) CreatePOBSnapshot(characterId string, exportString string) error {
-	query := `
-	INSERT INTO pobsnapshots (id, character_id, export_string, created_at, updated_at)
+const createPobSnapshot = `
+INSERT INTO pobsnapshots (id, character_id, export_string, created_at, updated_at)
 	VALUES(?, ?, ?, ?, ?)
-	`
+`
 
+type CreatePoBSnapshotParams struct {
+	CharacterId  string
+	ExportString string
+}
+
+func (r *Repository) CreatePOBSnapshot(params CreatePoBSnapshotParams) error {
 	now := time.Now().UTC().Format(time.RFC3339)
 	idString := uuid.New().String()
 
-	_, err := r.db.Exec(query, idString, characterId, exportString, now, now)
+	_, err := r.db.Exec(createPobSnapshot,
+		idString,
+		params.CharacterId,
+		params.ExportString,
+		now,
+		now,
+	)
 	return err
 }
 
