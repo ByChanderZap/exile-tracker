@@ -14,7 +14,7 @@ So a wanted to track good players to see which updates they do.
 ---
 
 ## Plans
-- **POB Export** The application will generate a snapshot automatically, this string will importable into PoB
+- ~~**POB Export** The application will generate a snapshot automatically, this string will importable into PoB~~ **DONE**
 - **SSH Application** There will be an option to connect to a server via ssh to see in there directly the snapshots 
 
 
@@ -30,7 +30,8 @@ So a wanted to track good players to see which updates they do.
 
 ## Current focus
 
-- **Understanding PoB** Im trying to figure out how to generate something that PoB can understand
+- **Basic functionallity is done** On the current state of the application the basic functionallity to periodicly
+import builds from certain people/characters is already working and the application can be runned locally without any issue (i think). Now. I will try to host it somewhere, im not sure if it will have a UI or will it be just like an API to fetch this data. Also, i will focus on building a TUI that once hosted, anyone will be able to see it via SSH.
 
 ---
 
