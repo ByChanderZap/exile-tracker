@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ByChanderZap/exile-tracker/buildsSitesClient"
 	"github.com/ByChanderZap/exile-tracker/config"
 	"github.com/ByChanderZap/exile-tracker/models"
 	"github.com/ByChanderZap/exile-tracker/poeclient"
@@ -136,8 +137,6 @@ func (fs *FetcherService) FetchCharacterData(ctf models.CharactersToFetch) {
 }
 
 func (fs *FetcherService) CreateSnapshot(characterId string, items models.ItemsResponse, passives models.PassiveSkillsResponse) error {
-	fs.log.Info().Msg("Not implemented yet")
-
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return errors.Join(err, errors.New("failed to get current directory"))
@@ -174,7 +173,7 @@ func (fs *FetcherService) CreateSnapshot(characterId string, items models.ItemsR
 		return errors.Join(err, errors.New("something went wrong while encoding json passives"))
 	}
 
-	result, err := fs.executePob(itemsPath, passivesPath)
+	result, err := fs.generatePoBBin(itemsPath, passivesPath)
 	if err != nil {
 		return errors.Join(err, errors.New("failed to execute PoB"))
 	}
@@ -204,7 +203,7 @@ func (fs *FetcherService) CreateSnapshot(characterId string, items models.ItemsR
 	return nil
 }
 
-func (fs *FetcherService) executePob(itemsPath string, passivesPath string) (string, error) {
+func (fs *FetcherService) generatePoBBin(itemsPath string, passivesPath string) (string, error) {
 	fs.log.Info().Msg("Executing Path of Building in headless mode")
 	pobRoot := config.Envs.POBRoot
 
@@ -223,7 +222,14 @@ func (fs *FetcherService) executePob(itemsPath string, passivesPath string) (str
 	if err != nil {
 		return "", errors.Join(err, errors.New("the command execution failed"))
 	}
+
 	lines := strings.Split(string(output), "\n")
 	last := lines[len(lines)-2]
-	return last, nil
+
+	uploadedBuild, err := buildsSitesClient.UploadBuild(last, buildsSitesClient.SitesUrl.PoeNinja)
+	if err != nil {
+		return "", errors.Join(err, errors.New("failed when uploading build"))
+	}
+	fs.log.Debug().Msg(uploadedBuild)
+	return uploadedBuild, nil
 }
