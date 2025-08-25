@@ -2,9 +2,16 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/ByChanderZap/exile-tracker/config"
 	"github.com/ByChanderZap/exile-tracker/models"
 	"github.com/ByChanderZap/exile-tracker/poeclient"
 	"github.com/ByChanderZap/exile-tracker/repository"
@@ -87,7 +94,6 @@ func (fs *FetcherService) FetchCharacterData(ctf models.CharactersToFetch) {
 		return
 	}
 
-	// Creating a logger with the "context" of the character that is beign processed
 	log := fs.log.With().
 		Str("account", acc.AccountName).
 		Str("character", c.CharacterName).Logger()
@@ -122,9 +128,102 @@ func (fs *FetcherService) FetchCharacterData(ctf models.CharactersToFetch) {
 		return
 	}
 
-	fs.CreateSnapshot(c.ID, itemsResponse, passivesResponse)
+	err = fs.CreateSnapshot(c.ID, itemsResponse, passivesResponse)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to create snapshot")
+		return
+	}
 }
 
-func (fs *FetcherService) CreateSnapshot(characterId string, items models.ItemsResponse, passives models.PassiveSkillsResponse) {
+func (fs *FetcherService) CreateSnapshot(characterId string, items models.ItemsResponse, passives models.PassiveSkillsResponse) error {
 	fs.log.Info().Msg("Not implemented yet")
+
+	currentDir, err := os.Getwd()
+	if err != nil {
+		return errors.Join(err, errors.New("failed to get current directory"))
+	}
+
+	dirPath := filepath.Join(currentDir, characterId)
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
+		return errors.Join(err, errors.New("failed to create character directory"))
+	}
+
+	itemsPath := filepath.Join(dirPath, "items.json")
+	file, err := os.OpenFile(itemsPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return errors.Join(err, errors.New("error trying to open items file"))
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(items)
+	if err != nil {
+		return errors.Join(err, errors.New("something went wrong while encoding json items"))
+	}
+
+	passivesPath := filepath.Join(dirPath, "passives.json")
+	passivesFile, err := os.OpenFile(passivesPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return errors.Join(err, errors.New("error trying to open passives file"))
+	}
+	defer passivesFile.Close()
+
+	encoder2 := json.NewEncoder(passivesFile)
+	err = encoder2.Encode(passives)
+	if err != nil {
+		return errors.Join(err, errors.New("something went wrong while encoding json passives"))
+	}
+
+	result, err := fs.executePob(itemsPath, passivesPath)
+	if err != nil {
+		return errors.Join(err, errors.New("failed to execute PoB"))
+	}
+	// Clean up after execution
+	os.RemoveAll(dirPath)
+
+	dbSnapshot, err := fs.repo.GetLatestSnapshotByCharacter(characterId)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			return errors.Join(err, errors.New("something went wrong while getting snapshots"))
+		}
+		fs.log.Warn().Msg("No previous snapshots found.")
+	}
+
+	if result == dbSnapshot.ExportString {
+		return errors.New("no changes detected between latest and current snapshot")
+	}
+
+	err = fs.repo.CreatePOBSnapshot(repository.CreatePoBSnapshotParams{
+		CharacterId:  characterId,
+		ExportString: result,
+	})
+	if err != nil {
+		return errors.Join(err, errors.New("something went wrong while trying to store snapshot"))
+	}
+
+	return nil
+}
+
+func (fs *FetcherService) executePob(itemsPath string, passivesPath string) (string, error) {
+	fs.log.Info().Msg("Executing Path of Building in headless mode")
+	pobRoot := config.Envs.POBRoot
+
+	srcDir := filepath.Join(pobRoot, "src")
+
+	runtimeLua := filepath.Join(pobRoot, "runtime", "lua")
+	runtime := filepath.Join(pobRoot, "runtime")
+	os.Setenv("LUA_PATH", runtimeLua+"/?.lua;"+runtimeLua+"/?/init.lua;;")
+	os.Setenv("LUA_CPATH", runtime+"/?.so;"+runtime+"/?.dll;;")
+
+	// Use absolute paths for JSON files to avoid any path resolution issues
+	cmd := exec.Command("luajit", "HeadlessWrapper.lua", itemsPath, passivesPath)
+	cmd.Dir = srcDir // Set working directory for this command only
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", errors.Join(err, errors.New("the command execution failed"))
+	}
+	lines := strings.Split(string(output), "\n")
+	last := lines[len(lines)-2]
+	return last, nil
 }
