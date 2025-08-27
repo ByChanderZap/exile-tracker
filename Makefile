@@ -12,6 +12,9 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 GOMOD=$(GOCMD) mod
 
+# Tool commands
+TEMPL=templ
+
 # Build flags
 LDFLAGS=-ldflags "-X main.Version=$(shell git describe --tags --always --dirty)"
 
@@ -21,11 +24,17 @@ help: ## Show this help message
 	@echo 'Targets:'
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
+migrate: ## Run DB migrations
+	goose -dir ./migrations sqlite3 ./data.db up
+
+generate: ## Generate templ files
+	$(TEMPL) generate
+
 deps: ## Download dependencies
 	$(GOMOD) tidy
 	$(GOMOD) download
 
-build: deps ## Build the application
+build: deps generate migrate ## Build the application
 	@echo "Building $(BINARY_NAME)..."
 	@mkdir -p $(BUILD_DIR)
 	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd
@@ -34,7 +43,7 @@ run: build ## Build and run the application
 	@echo "Running $(BINARY_NAME)..."
 	./$(BUILD_DIR)/$(BINARY_NAME)
 
-dev: ## Run the application in development mode
+dev: generate migrate ## Run the application in development mode
 	@echo "Running in development mode..."
 	$(GOCMD) run ./cmd
 
@@ -53,21 +62,13 @@ clean: ## Clean build artifacts
 	rm -rf $(BUILD_DIR)
 	rm -f coverage.out
 
-install: build ## Install the binary to /usr/local/bin
-	@echo "Installing $(BINARY_NAME)..."
-	sudo cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/
+# docker-build: ## Build Docker image
+# 	@echo "Building Docker image..."
+# 	docker build -t $(BINARY_NAME) .
 
-uninstall: ## Remove the binary from /usr/local/bin
-	@echo "Uninstalling $(BINARY_NAME)..."
-	sudo rm -f /usr/local/bin/$(BINARY_NAME)
-
-docker-build: ## Build Docker image
-	@echo "Building Docker image..."
-	docker build -t $(BINARY_NAME) .
-
-docker-run: ## Run Docker container
-	@echo "Running Docker container..."
-	docker run -p 8080:8080 $(BINARY_NAME)
+# docker-run: ## Run Docker container
+# 	@echo "Running Docker container..."
+# 	docker run -p 8080:8080 $(BINARY_NAME)
 
 lint: ## Run linter
 	@echo "Running linter..."
@@ -77,6 +78,3 @@ fmt: ## Format code
 	@echo "Formatting code..."
 	$(GOCMD) fmt ./...
 
-vet: ## Run go vet
-	@echo "Running go vet..."
-	$(GOCMD) vet ./...

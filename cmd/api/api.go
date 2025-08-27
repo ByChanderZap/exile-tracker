@@ -7,6 +7,7 @@ import (
 	"github.com/ByChanderZap/exile-tracker/repository"
 	"github.com/ByChanderZap/exile-tracker/services/accounts"
 	"github.com/ByChanderZap/exile-tracker/services/characters"
+	"github.com/ByChanderZap/exile-tracker/services/frontend"
 	"github.com/ByChanderZap/exile-tracker/services/pobsnapshots"
 	"github.com/ByChanderZap/exile-tracker/utils"
 	"github.com/go-chi/chi/v5"
@@ -33,6 +34,7 @@ func (s *APIServer) Start() error {
 
 	router := chi.NewRouter()
 	v1Router := chi.NewRouter()
+	frontendRouter := chi.NewRouter()
 
 	// character endpoints
 	cHandler := characters.NewHandler(s.repository, s.log)
@@ -46,7 +48,12 @@ func (s *APIServer) Start() error {
 	poeHandler := pobsnapshots.NewHandler(s.repository)
 	poeHandler.RegisterRoutes(v1Router)
 
+	// frontend endpoints
+	fHandler := frontend.NewHandler(s.repository, s.log)
+	fHandler.RegisterRoutes(frontendRouter)
+
 	router.Mount("/api/v1", v1Router)
+	router.Mount("/", frontendRouter)
 
 	s.server = &http.Server{
 		Addr:    s.addr,
