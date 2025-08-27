@@ -39,11 +39,21 @@ templ Main(accounts []models.Account, stringValue func(*string) string) {
 						<a href="#" class="text-lg font-medium hover:text-pink-400 transition">Snapshots</a>
 					</div>
 					<label class="mb-1 text-sm text-gray-300" for="search-accounts">Search accounts</label>
-					<input id="search-accounts" type="text" placeholder="Search..." class="input input-bordered w-64 text-black bg-transparent text-white"/>
+					<input 
+						id="search-accounts" 
+						type="text" 
+						placeholder="Search..." 
+						class="input input-bordered w-64 text-black bg-transparent text-white"
+						hx-get="/search"
+						hx-trigger="keyup changed delay:500ms"
+						hx-target="#accounts-table"
+						hx-include="[name='q']"
+						name="q"
+					/>
 				</div>
 				<div class="flex flex-col gap-4 justify-center items-center bg-transparent md:pt-8">
 					// Table
-					<div class="w-full max-w-4xl mx-auto border border-gray-600 rounded-lg overflow-hidden backdrop-blur-sm">
+					<div id="accounts-table" class="w-full max-w-4xl mx-auto border border-gray-600 rounded-lg overflow-hidden backdrop-blur-sm">
 						// Header
 						<div class="flex font-bold bg-gray-400 bg-opacity-15">
 							<div class="flex-1 px-4 py-3 border-r border-gray-600">

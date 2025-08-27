@@ -90,3 +90,30 @@ func (r *Repository) UpdateAccount(arg UpdateAccountParams) error {
 	}
 	return nil
 }
+
+func (r *Repository) SearchAccounts(searchTerm string) ([]models.Account, error) {
+	query := `
+	SELECT id, account_name, player, updated_at, created_at 
+	FROM accounts 
+	WHERE deleted_at IS NULL 
+	AND (account_name LIKE ? OR player LIKE ?)
+	`
+
+	searchPattern := "%" + searchTerm + "%"
+	rows, err := r.db.Query(query, searchPattern, searchPattern)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var accounts []models.Account
+	for rows.Next() {
+		var acc models.Account
+		err := rows.Scan(&acc.ID, &acc.AccountName, &acc.Player, &acc.UpdatedAt, &acc.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		accounts = append(accounts, acc)
+	}
+	return accounts, nil
+}

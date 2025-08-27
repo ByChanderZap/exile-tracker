@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import "github.com/ByChanderZap/exile-tracker/models"
 
-func Main(accounts []models.Account, stringValue func(*string) string) templ.Component {
+func AccountsTable(accounts []models.Account, stringValue func(*string) string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -31,7 +31,7 @@ func Main(accounts []models.Account, stringValue func(*string) string) templ.Com
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html><head><link href=\"https://cdn.jsdelivr.net/npm/daisyui@4.4.18/dist/full.min.css\" rel=\"stylesheet\" type=\"text/css\"><script src=\"https://cdn.tailwindcss.com\"></script><script src=\"/static/htmx.min.js\"></script><link rel=\"icon\" type=\"image/x-icon\" href=\"/static/favicon.ico\"></head><body class=\"min-h-screen w-full bg-[#101014] text-white\" style=\"\n        background-image:\n          repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 40px),\n          repeating-linear-gradient(45deg, rgba(0,255,128,0.09) 0, rgba(0,255,128,0.09) 1px, transparent 1px, transparent 20px),\n          repeating-linear-gradient(-45deg, rgba(255,0,128,0.10) 0, rgba(255,0,128,0.10) 1px, transparent 1px, transparent 30px),\n          repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 80px),\n          radial-gradient(circle at 60% 40%, rgba(0,255,128,0.05) 0, transparent 60%);\n        background-size: 80px 80px, 40px 40px, 60px 60px, 80px 80px, 100% 100%;\n        background-position: 0 0, 0 0, 0 0, 40px 40px, center;\n      \"><div class=\"container mx-auto lg:py-8\"><div class=\"text-center mb-8\"><h1 class=\"text-3xl font-bold mb-2\">Exile Tracker</h1></div><div class=\"flex flex-col items-center\"><div class=\"flex flex-row gap-4 items-center justify-center mb-6\"><a href=\"#\" class=\"text-lg font-medium hover:text-pink-400 transition\">Accounts</a> <a href=\"#\" class=\"text-lg font-medium hover:text-pink-400 transition\">Characters</a> <a href=\"#\" class=\"text-lg font-medium hover:text-pink-400 transition\">Snapshots</a></div><label class=\"mb-1 text-sm text-gray-300\" for=\"search-accounts\">Search accounts</label> <input id=\"search-accounts\" type=\"text\" placeholder=\"Search...\" class=\"input input-bordered w-64 text-black bg-transparent text-white\" hx-get=\"/search\" hx-trigger=\"keyup changed delay:500ms\" hx-target=\"#accounts-table\" hx-include=\"[name='q']\" name=\"q\"></div><div class=\"flex flex-col gap-4 justify-center items-center bg-transparent md:pt-8\"><div id=\"accounts-table\" class=\"w-full max-w-4xl mx-auto border border-gray-600 rounded-lg overflow-hidden backdrop-blur-sm\"><div class=\"flex font-bold bg-gray-400 bg-opacity-15\"><div class=\"flex-1 px-4 py-3 border-r border-gray-600\">ID\t</div><div class=\"flex-1 px-4 py-3 border-r border-gray-600\">AccountName\t</div><div class=\"flex-1 px-4 py-3\">Friendly Name</div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"flex font-bold bg-gray-400 bg-opacity-15\"><div class=\"flex-1 px-4 py-3 border-r border-gray-600\">ID\t</div><div class=\"flex-1 px-4 py-3 border-r border-gray-600\">AccountName\t</div><div class=\"flex-1 px-4 py-3\">Friendly Name</div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -43,7 +43,7 @@ func Main(accounts []models.Account, stringValue func(*string) string) templ.Com
 			var templ_7745c5c3_Var2 string
 			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(acc.ID)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/web/templates/index.templ`, Line: 73, Col: 17}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/web/templates/accounts_table.templ`, Line: 22, Col: 12}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
 			if templ_7745c5c3_Err != nil {
@@ -56,7 +56,7 @@ func Main(accounts []models.Account, stringValue func(*string) string) templ.Com
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(acc.AccountName)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/web/templates/index.templ`, Line: 76, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/web/templates/accounts_table.templ`, Line: 25, Col: 21}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -69,7 +69,7 @@ func Main(accounts []models.Account, stringValue func(*string) string) templ.Com
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(stringValue(acc.Player))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/web/templates/index.templ`, Line: 79, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `cmd/web/templates/accounts_table.templ`, Line: 28, Col: 29}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -79,10 +79,6 @@ func Main(accounts []models.Account, stringValue func(*string) string) templ.Com
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></div></div></body></html>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
 		}
 		return nil
 	})

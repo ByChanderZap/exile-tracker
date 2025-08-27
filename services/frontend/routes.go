@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ByChanderZap/exile-tracker/cmd/web/templates"
+	"github.com/ByChanderZap/exile-tracker/models"
 	"github.com/ByChanderZap/exile-tracker/repository"
 	"github.com/ByChanderZap/exile-tracker/utils"
 	"github.com/go-chi/chi/v5"
@@ -28,6 +29,7 @@ func (h *Handler) RegisterRoutes(router *chi.Mux) {
 	router.Handle("/static/*", http.StripPrefix("/static/", fs))
 
 	router.Get("/", h.handleHomePage)
+	router.Get("/search", h.handleSearchAccounts)
 	// router.Get("/accounts", h.handleAccounts)
 }
 
@@ -44,9 +46,23 @@ func (h *Handler) handleHomePage(w http.ResponseWriter, r *http.Request) {
 	templates.Main(accounts, utils.StringValue).Render(r.Context(), w)
 }
 
-func ptrToSomething(s *string) string {
-	if s == nil {
-		return ""
+func (h *Handler) handleSearchAccounts(w http.ResponseWriter, r *http.Request) {
+	searchTerm := r.URL.Query().Get("q")
+
+	var accounts []models.Account
+	var err error
+
+	if searchTerm == "" {
+		accounts, err = h.repository.GetAllAccounts()
+	} else {
+		accounts, err = h.repository.SearchAccounts(searchTerm)
 	}
-	return *s
+
+	if err != nil {
+		h.log.Error().Err(err).Msg("Query to search accounts failed")
+		http.Error(w, "Failed to search accounts", http.StatusInternalServerError)
+		return
+	}
+
+	templates.AccountsTable(accounts, utils.StringValue).Render(r.Context(), w)
 }

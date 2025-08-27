@@ -1,0 +1,32 @@
+package templates
+
+import "github.com/ByChanderZap/exile-tracker/models"
+
+templ AccountsTable(accounts []models.Account, stringValue func(*string) string) {
+	// Header
+	<div class="flex font-bold bg-gray-400 bg-opacity-15">
+		<div class="flex-1 px-4 py-3 border-r border-gray-600">
+			ID	
+		</div>
+		<div class="flex-1 px-4 py-3 border-r border-gray-600">
+			AccountName	
+		</div>
+		<div class="flex-1 px-4 py-3">
+			Friendly Name
+		</div>
+	</div>
+	// Rows
+	for _, acc := range accounts {
+		<a href="/characters/{ acc.ID }" class="flex hover:bg-gray-700/50 transition-colors border-b border-gray-600 last:border-b-0">
+			<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white break-all">
+				{ acc.ID }
+			</div>
+			<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white">
+				{ acc.AccountName }
+			</div>
+			<div class="flex-1 px-4 py-3 text-white">
+				{ stringValue(acc.Player) }
+			</div>
+		</a>
+	}
+}
