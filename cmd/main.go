@@ -11,7 +11,9 @@ import (
 	"github.com/ByChanderZap/exile-tracker/cmd/api"
 	"github.com/ByChanderZap/exile-tracker/config"
 	"github.com/ByChanderZap/exile-tracker/db"
+	"github.com/ByChanderZap/exile-tracker/poeclient"
 	"github.com/ByChanderZap/exile-tracker/repository"
+	"github.com/ByChanderZap/exile-tracker/services"
 	"github.com/ByChanderZap/exile-tracker/utils"
 	"github.com/rs/zerolog"
 )
@@ -28,8 +30,8 @@ func main() {
 	repo := repository.NewRepository(db)
 
 	server := api.NewAPIServer(config.Envs.Port, repo)
-	// poeClient := poeclient.NewPoeClient(10 * time.Second)
-	// fetcher := services.NewFetcherService(repo, poeClient, 20*time.Minute)
+	poeClient := poeclient.NewPoeClient(10 * time.Second)
+	fetcher := services.NewFetcherService(repo, poeClient, 20*time.Minute)
 
 	// Start server in a goroutine
 	go func() {
@@ -38,10 +40,10 @@ func main() {
 		}
 	}()
 
-	// Start fetcher service in a goroutine
-	// go func() {
-	// 	fetcher.Start(context.Background())
-	// }()
+	/* Start fetcher service in a goroutine */
+	go func() {
+		fetcher.Start(context.Background())
+	}()
 
 	// Wait for shutdown signal
 	sigChan := make(chan os.Signal, 1)
@@ -58,8 +60,8 @@ func main() {
 	}
 
 	// Stop fetcher gracefully
-	// log.Info().Msg("Shutting down fetcher")
-	// fetcher.Stop()
+	log.Info().Msg("Shutting down fetcher")
+	fetcher.Stop()
 
 	log.Info().Msg("Application shutdown complete.")
 }

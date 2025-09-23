@@ -177,6 +177,7 @@ func (fs *FetcherService) CreateSnapshot(characterId string, items models.ItemsR
 	if err != nil {
 		return errors.Join(err, errors.New("failed to execute PoB"))
 	}
+
 	// Clean up after execution
 	os.RemoveAll(dirPath)
 
@@ -211,11 +212,12 @@ func (fs *FetcherService) generatePoBBin(itemsPath string, passivesPath string) 
 
 	runtimeLua := filepath.Join(pobRoot, "runtime", "lua")
 	runtime := filepath.Join(pobRoot, "runtime")
+
 	os.Setenv("LUA_PATH", runtimeLua+"/?.lua;"+runtimeLua+"/?/init.lua;;")
 	os.Setenv("LUA_CPATH", runtime+"/?.so;"+runtime+"/?.dll;;")
 
 	// Use absolute paths for JSON files to avoid any path resolution issues
-	cmd := exec.Command("luajit", "HeadlessWrapper.lua", itemsPath, passivesPath)
+	cmd := exec.Command("/usr/bin/luajit", "HeadlessWrapper.lua", itemsPath, passivesPath)
 	cmd.Dir = srcDir // Set working directory for this command only
 
 	output, err := cmd.CombinedOutput()

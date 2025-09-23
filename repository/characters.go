@@ -7,6 +7,42 @@ import (
 	"github.com/google/uuid"
 )
 
+const searchCharactersInAccount = `
+	SELECT id, character_name
+	FROM characters
+	WHERE deleted_at IS NULL
+	AND account_id = ?
+	AND character_name LIKE ?
+`
+
+type SearchCharactersInAccountParams struct {
+	AccountId string
+	Query     string
+}
+
+func (r *Repository) SearchCharactersInAccount(params SearchCharactersInAccountParams) ([]models.Character, error) {
+	searchPattern := "%" + params.Query + "%"
+	rows, err := r.db.Query(searchCharactersInAccount, params.AccountId, searchPattern)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var characters []models.Character
+
+	for rows.Next() {
+		var c models.Character
+		err := rows.Scan(&c.ID, &c.CharacterName)
+		if err != nil {
+			return nil, err
+		}
+		characters = append(characters, c)
+	}
+
+	return characters, nil
+}
+
 func (r *Repository) GetCharactersByAccountId(accountId string) ([]models.Character, error) {
 	query := `
 	SELECT id, account_id, character_name, died, current_league, created_at, updated_at

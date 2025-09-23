@@ -3,13 +3,13 @@ package templates
 import "github.com/ByChanderZap/exile-tracker/models"
 import "fmt"
 
-templ Main(accounts []models.Account, stringValue func(*string) string) {
+templ CharactersByAccountId(characters []models.Character, accountId string, stringValue func(*string) string) {
 	<!DOCTYPE html>
 	<html>
 		<head>
 			<link
 				href="https://cdn.jsdelivr.net/npm/daisyui@4.4.18/dist/full.min.css"
-				rel="stylesheet"
+			rel="stylesheet"
 				type="text/css"
 			/>
 			<script src="https://cdn.tailwindcss.com"></script>
@@ -41,47 +41,41 @@ templ Main(accounts []models.Account, stringValue func(*string) string) {
 					</div>
 					<label class="mb-1 text-sm text-gray-300" for="search-accounts">Search accounts</label>
 					<input
-						id="search-accounts"
+						id="search-characters"
 						type="text"
 						placeholder="Search..."
 						class="input input-bordered w-64 text-black bg-transparent text-white"
-						hx-get="/search"
+						hx-get={fmt.Sprintf("/accounts/%s/characters/search", accountId)}
 						hx-trigger="keyup changed delay:500ms"
-						hx-target="#accounts-table"
+						hx-target="#characters-table"
 						hx-include="[name='q']"
 						name="q"
-					/>
+            />
 				</div>
 				<div class="flex flex-col gap-4 justify-center items-center bg-transparent md:pt-8">
 					// Table
-					<div id="accounts-table" class="w-full max-w-4xl mx-auto border border-gray-600 rounded-lg overflow-hidden backdrop-blur-sm">
+					<div id="characters-table" class="w-full max-w-4xl mx-auto border border-gray-600 rounded-lg overflow-hidden backdrop-blur-sm">
 						// Header
 						<div class="flex font-bold bg-gray-400 bg-opacity-15">
 							<div class="flex-1 px-4 py-3 border-r border-gray-600">
 								ID
 							</div>
 							<div class="flex-1 px-4 py-3 border-r border-gray-600">
-								AccountName
-							</div>
-							<div class="flex-1 px-4 py-3">
-								Friendly Name
-							</div>
+							  Character Name
+              </div>
 						</div>
-						// Rows
-						for _, acc := range accounts {
-							<a href={fmt.Sprintf("accounts/%s/characters", acc.ID)} class="flex hover:bg-gray-700/50 transition-colors border-b border-gray-600 last:border-b-0">
-								<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white break-all">
-									{ acc.ID }
-								</div>
-								<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white">
-									{ acc.AccountName }
-								</div>
-								<div class="flex-1 px-4 py-3 text-white">
-									{ stringValue(acc.Player) }
-								</div>
-							</a>
-						}
-					</div>
+            for _, c := range characters {
+                //TODO: Make it so that clicking on  a character send you to the snapshots for that character (i think)
+		            <a href={fmt.Sprintf("/characters/%s", c.ID)} class="flex hover:bg-gray-700/50 transition-colors border-b border-gray-600 last:border-b-0">
+  								<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white break-all">
+	  								{ c.ID }
+	  							</div>
+	  							<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white">
+	  								{ c.CharacterName }
+  								</div>
+	  						</a>
+            }
+            </div>
 				</div>
 			</div>
 		</body>

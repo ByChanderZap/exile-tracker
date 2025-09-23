@@ -1,6 +1,8 @@
 package frontend
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 
 	"github.com/ByChanderZap/exile-tracker/cmd/web/templates"
@@ -30,7 +32,9 @@ func (h *Handler) RegisterRoutes(router *chi.Mux) {
 
 	router.Get("/", h.handleHomePage)
 	router.Get("/search", h.handleSearchAccounts)
-	// router.Get("/accounts", h.handleAccounts)
+	// show characters by accound and search characters within an account
+	router.Get("/accounts/{accountId}/characters", h.handleCharactersByAccount)
+	router.Get("/accounts/{accountId}/characters/search", h.handleCharactersSearchByAccount)
 }
 
 func (h *Handler) handleHomePage(w http.ResponseWriter, r *http.Request) {
@@ -65,4 +69,45 @@ func (h *Handler) handleSearchAccounts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templates.AccountsTable(accounts, utils.StringValue).Render(r.Context(), w)
+}
+
+func (h *Handler) handleCharactersByAccount(w http.ResponseWriter, r *http.Request) {
+	accId := chi.URLParam(r, "accountId")
+
+	cs, err := h.repository.GetCharactersByAccountId(accId)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "No characters to show", http.StatusNotFound)
+			return
+		}
+		h.log.Error().Err(err).Msg("Query to get all characters by account id failed")
+		http.Error(w, "Failed to load characters", http.StatusBadRequest)
+		return
+	}
+	templates.CharactersByAccountId(cs, accId, utils.StringValue).Render(r.Context(), w)
+}
+
+func (h *Handler) handleCharactersSearchByAccount(w http.ResponseWriter, r *http.Request) {
+	accId := chi.URLParam(r, "accountId")
+	searchTerm := r.URL.Query().Get("q")
+
+	var characters []models.Character
+	var err error
+
+	if searchTerm == "" {
+		characters, err = h.repository.GetCharactersByAccountId(accId)
+	} else {
+		characters, err = h.repository.SearchCharactersInAccount(repository.SearchCharactersInAccountParams{
+			AccountId: accId,
+			Query:     searchTerm,
+		})
+	}
+
+	if err != nil {
+		h.log.Error().Err(err).Msg("Query to search characters in account failed")
+		http.Error(w, "Failed to search characters by account", http.StatusInternalServerError)
+		return
+	}
+
+	templates.CharactersTable(characters, utils.StringValue).Render(r.Context(), w)
 }
