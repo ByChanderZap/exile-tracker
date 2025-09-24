@@ -31,6 +31,46 @@ func (r *Repository) CreatePOBSnapshot(params CreatePoBSnapshotParams) error {
 	return err
 }
 
+const getSnapshotsByCharacterWithExtras = `
+	SELECT p.id, p.export_string, c.character_name, a.account_name, p.created_at  
+	FROM pobsnapshots p
+	INNER JOIN characters c on c.id = p.character_id
+	INNER JOIN accounts a on a.id = c.account_id
+	WHERE p.character_id = ?
+	ORDER BY p.created_at DESC
+`
+
+type GetSnapshotsByCharacterWithExtras struct {
+	CharacterId string
+}
+
+func (r *Repository) GetSnapshotsByCharacterWithExtras(params GetSnapshotsByCharacterWithExtras) ([]models.SnapshotWithExtras, error) {
+	rows, err := r.db.Query(getSnapshotsByCharacterWithExtras, params.CharacterId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var swe []models.SnapshotWithExtras
+	for rows.Next() {
+
+		var s models.SnapshotWithExtras
+		err := rows.Scan(
+			&s.SnapshotData.ID,
+			&s.SnapshotData.ExportString,
+			&s.CharacterName,
+			&s.AccountName,
+			&s.SnapshotData.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		swe = append(swe, s)
+	}
+
+	return swe, nil
+}
+
 func (r *Repository) GetSnapshotsByCharacter(characterId string) ([]models.POBSnapshot, error) {
 	query := `
 	SELECT id, character_id, export_string, created_at, updated_at, deleted_at

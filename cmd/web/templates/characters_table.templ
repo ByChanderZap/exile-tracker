@@ -16,7 +16,7 @@ templ CharactersTable(characters []models.Character, stringValue func(*string) s
 	// Rows
 	for _, c := range characters {
   // TODO: Change it so that if you click on a character it sends you to the snapshots for that character (i think)
-		<a href={fmt.Sprintf("/test/%s", c.ID)} class="flex hover:bg-gray-700/50 transition-colors border-b border-gray-600 last:border-b-0">
+		<a href={fmt.Sprintf("/snapshots/%s", c.ID)} class="flex hover:bg-gray-700/50 transition-colors border-b border-gray-600 last:border-b-0">
 			<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white break-all">
 				{ c.ID }
 			</div>

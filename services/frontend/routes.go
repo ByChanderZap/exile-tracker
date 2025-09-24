@@ -35,6 +35,7 @@ func (h *Handler) RegisterRoutes(router *chi.Mux) {
 	// show characters by accound and search characters within an account
 	router.Get("/accounts/{accountId}/characters", h.handleCharactersByAccount)
 	router.Get("/accounts/{accountId}/characters/search", h.handleCharactersSearchByAccount)
+	router.Get("/snapshots/{characterId}", h.handleLoadedSnapshotsByCharacter)
 }
 
 func (h *Handler) handleHomePage(w http.ResponseWriter, r *http.Request) {
@@ -110,4 +111,21 @@ func (h *Handler) handleCharactersSearchByAccount(w http.ResponseWriter, r *http
 	}
 
 	templates.CharactersTable(characters, utils.StringValue).Render(r.Context(), w)
+}
+
+func (h *Handler) handleLoadedSnapshotsByCharacter(w http.ResponseWriter, r *http.Request) {
+	cId := chi.URLParam(r, "characterId")
+
+	snaps, err := h.repository.GetSnapshotsByCharacterWithExtras(repository.GetSnapshotsByCharacterWithExtras{
+		CharacterId: cId,
+	})
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "No snapshots found", http.StatusNotFound)
+		}
+		http.Error(w, "something went wrong", http.StatusBadRequest)
+	}
+
+	templates.SnapshotsPage(snaps, utils.StringValue).Render(r.Context(), w)
 }

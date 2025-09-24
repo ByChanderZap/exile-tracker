@@ -2,8 +2,9 @@ package templates
 
 import "github.com/ByChanderZap/exile-tracker/models"
 import "fmt"
+import "time"
 
-templ CharactersByAccountId(characters []models.Character, accountId string, stringValue func(*string) string) {
+templ SnapshotsPage(swe []models.SnapshotWithExtras, stringValue func(*string) string) {
 	<!DOCTYPE html>
 	<html>
 		<head>
@@ -39,18 +40,21 @@ templ CharactersByAccountId(characters []models.Character, accountId string, str
 						<a href="#" class="text-lg font-medium hover:text-pink-400 transition">Characters</a>
 						<a href="#" class="text-lg font-medium hover:text-pink-400 transition">Snapshots</a>
 					</div>
-					<label class="mb-1 text-sm text-gray-300" for="search-accounts">Search accounts</label>
-					<input
-						id="search-characters"
-						type="text"
-						placeholder="Search..."
-						class="input input-bordered w-64 text-black bg-transparent text-white"
-						hx-get={fmt.Sprintf("/accounts/%s/characters/search", accountId)}
-						hx-trigger="keyup changed delay:500ms"
-						hx-target="#characters-table"
-						hx-include="[name='q']"
-						name="q"
-            />
+          <h2>
+            { fmt.Sprintf("%s Snapshots by %s", swe[0].CharacterName, swe[0].AccountName) }
+          </h2>
+					<!-- <label class="mb-1 text-sm text-gray-300" for="search-accounts">Search accounts</label> -->
+					<!-- <input -->
+					<!-- 	id="search-characters" -->
+					<!-- 	type="text" -->
+					<!-- 	placeholder="Search..." -->
+					<!-- 	class="input input-bordered w-64 text-black bg-transparent text-white" -->
+					<!-- 	hx-get={fmt.Sprintf("/accounts/%s/characters/search", accountId)} -->
+					<!-- 	hx-trigger="keyup changed delay:500ms" -->
+					<!-- 	hx-target="#characters-table" -->
+					<!-- 	hx-include="[name='q']" -->
+					<!-- 	name="q" -->
+          <!--        /> -->
 				</div>
 				<div class="flex flex-col gap-4 justify-center items-center bg-transparent md:pt-8">
 					// Table
@@ -61,18 +65,24 @@ templ CharactersByAccountId(characters []models.Character, accountId string, str
 								ID
 							</div>
 							<div class="flex-1 px-4 py-3 border-r border-gray-600">
-							  Character Name
+							  PoB
               </div>
-						</div>
-            for _, c := range characters {
-		            <a href={fmt.Sprintf("/snapshots/%s", c.ID)} class="flex hover:bg-gray-700/50 transition-colors border-b border-gray-600 last:border-b-0">
+              <div class="text-white flex-1 px-4 py-3 border-r border-gray-600">
+							  Fetched time
+              </div>
+            </div>
+            for _, data := range swe {
+		            <div class="flex hover:bg-gray-700/50 transition-colors border-b border-gray-600 last:border-b-0">
   								<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white break-all">
-	  								{ c.ID }
+	  								{ data.SnapshotData.ID }
 	  							</div>
 	  							<div class="flex-1 px-4 py-3 border-r border-gray-600 text-white">
-	  								{ c.CharacterName }
+	  								{ data.SnapshotData.ExportString }
   								</div>
-	  						</a>
+                  <div class="flex-1 px-4 py-3 border-r border-gray-600 text-white">
+	  								{ time.Since(data.SnapshotData.CreatedAt).Truncate(time.Second) }
+  								</div>
+	  						</div>
             }
             </div>
 				</div>

@@ -2,6 +2,12 @@ package models
 
 import "time"
 
+type SnapshotWithExtras struct {
+	SnapshotData  POBSnapshot
+	CharacterName string
+	AccountName   string
+}
+
 type Account struct {
 	ID          string  `json:"id"`
 	AccountName string  `json:"account_name"`
